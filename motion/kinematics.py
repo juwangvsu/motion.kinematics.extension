@@ -160,6 +160,7 @@ class MotionKinematicsExtension(omni.ext.IExt):
             self.stack.call_physics_step(delta_p, delta_r, step_size)
 
     def delta(self):
+        #return np.array([0., -1., 0.0]), np.array([0.0, 0.0, 0.0, 1.0]) #dbg purpose
         delta_p, delta_r = None, None
         if self.kinematics_pose is not None:
             value = self.kinematics_pose
