@@ -226,6 +226,7 @@ class MotionKinematicsExtension(omni.ext.IExt):
             print("[MotionKinematicsExtension] Extension world exception {}".format(e))
 
     def on_physics_step(self, step_size):
+        #delta is tang's relative w.r.t head
         delta, self.kinematics_delta = getattr(self, "kinematics_delta", None), None
         if delta is not None:
             print(
@@ -241,7 +242,9 @@ class MotionKinematicsExtension(omni.ext.IExt):
                     position, orientation
                 )
             )
+            #base_p is cameraA's position in world frame
             base_p = position
+            cam_p = position
             base_o = np.array(
                 (orientation[1], orientation[2], orientation[3], orientation[0])
             )
@@ -263,9 +266,13 @@ class MotionKinematicsExtension(omni.ext.IExt):
                     pose_p, pose_o
                 )
             )
-
-            target_position = pose_p
-            target_orientation = np.array((pose_o[3], pose_o[0], pose_o[1], pose_o[2]))
+            
+            # wang's hack, no se3, just add relative p to cam_p
+            #target_position = pose_p
+            target_position = cam_p + delta_p
+            #target_orientation = np.array((pose_o[3], pose_o[0], pose_o[1], pose_o[2]))
+            target_orientation = np.array((1., 0., 0., 0.))
+            print("[MotionKinematicsExtension] Extension target pose: {} {}".format(target_position, target_orientation))
 
             kinematics, success = self.solver.compute_inverse_kinematics(
                 target_position=target_position, target_orientation=target_orientation

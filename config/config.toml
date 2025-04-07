@@ -1,0 +1,4 @@
+reference = "/World/ref_cube"
+server = "wss://service.zenimotion.com/nats"
+effector = "ee_link"
+articulation = "/World/Scene/ur10"
