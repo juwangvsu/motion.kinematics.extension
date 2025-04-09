@@ -13,7 +13,35 @@ from omni.isaac.core.articulations import Articulation
 from omni.isaac.core.prims import XFormPrim
 from omni.isaac.universal_robots.kinematics_solver import KinematicsSolver
 from scipy.spatial.transform import Rotation as R
+def comma_separated_string_to_list(input_string):
+  if not input_string.strip():  # Check if the string is empty or contains only whitespace
+    return []
 
+  number_strings = input_string.split(',')
+  number_list = []
+  for num_str in number_strings:
+    try:
+      # Remove leading/trailing whitespace and convert to integer
+      number_list.append(int(num_str.strip()))
+    except ValueError:
+      raise ValueError(f"Invalid number found: '{num_str.strip()}' in the input string.")
+  return number_list
+
+#convert to refp frame, iphone coord (2nd pv): x-right, y-up, z-inward
+#  refp issac coord (2nd pv, or perspective view) : x-forward, y-right, z-up
+def iphone_refp_tf(pose_xyz):
+    #z -90deg, then x -90 deg
+    R_final = np.array([[ 0.,  0, 1.],
+ [ 1., 0.,  0.],
+ [0.,  1.,  0.]])
+    R_inv = np.linalg.inv(R_final)
+    pose_xyz= np.dot(R_final, pose_xyz)
+    '''
+    iphone [1,0,0] -> ref [0,1,0]
+            [0,1,0] ->[0,0,1]
+            [0,0,1] ->[1,0,0]
+    '''
+    return pose_xyz
 
 class MotionKinematicsExtension(omni.ext.IExt):
     def __init__(self):
@@ -26,7 +54,9 @@ class MotionKinematicsExtension(omni.ext.IExt):
             "server": "ws://localhost:8081",
             "subject": "subject.pose",
             "token": None,
+            "ref_p": "0,0,0",
         }
+        self.ref_p=[0,0,0.5]
 
         try:
             ext_manager = omni.kit.app.get_app().get_extension_manager()
@@ -57,6 +87,11 @@ class MotionKinematicsExtension(omni.ext.IExt):
             self.config["token"] = (
                 config.get("token", self.config["token"]) or self.config["token"]
             )
+            self.config["ref_p"] = (
+                config.get("ref_p", self.config["ref_p"]) or self.config["ref_p"]
+            )
+            self.ref_p = comma_separated_string_to_list(self.config["ref_p"])
+            print('xxx ', self.ref_p)
         except Exception as e:
             print("[MotionKinematicsExtension] Extension config: {}".format(e))
 
@@ -269,7 +304,8 @@ class MotionKinematicsExtension(omni.ext.IExt):
             
             # wang's hack, no se3, just add relative p to cam_p
             #target_position = pose_p
-            target_position = cam_p + delta_p
+            delta_p = iphone_refp_tf(delta_p) 
+            target_position = self.ref_p + delta_p
             #target_orientation = np.array((pose_o[3], pose_o[0], pose_o[1], pose_o[2]))
             target_orientation = np.array((1., 0., 0., 0.))
             print("[MotionKinematicsExtension] Extension target pose: {} {}".format(target_position, target_orientation))
