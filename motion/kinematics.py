@@ -22,7 +22,7 @@ def comma_separated_string_to_list(input_string):
   for num_str in number_strings:
     try:
       # Remove leading/trailing whitespace and convert to integer
-      number_list.append(int(num_str.strip()))
+      number_list.append(float(num_str.strip()))
     except ValueError:
       raise ValueError(f"Invalid number found: '{num_str.strip()}' in the input string.")
   return number_list
@@ -90,8 +90,9 @@ class MotionKinematicsExtension(omni.ext.IExt):
             self.config["ref_p"] = (
                 config.get("ref_p", self.config["ref_p"]) or self.config["ref_p"]
             )
+            print('xxx ', self.config["ref_p"])
             self.ref_p = comma_separated_string_to_list(self.config["ref_p"])
-            print('xxx ', self.ref_p)
+            print('yyy ', self.ref_p)
         except Exception as e:
             print("[MotionKinematicsExtension] Extension config: {}".format(e))
 
@@ -265,7 +266,7 @@ class MotionKinematicsExtension(omni.ext.IExt):
         delta, self.kinematics_delta = getattr(self, "kinematics_delta", None), None
         if delta is not None:
             print(
-                "[MotionKinematicsExtension] Extension physics: {} {}".format(
+                "[MotionKinematicsExtension] iphone pose: {} {}".format(
                     delta, step_size
                 )
             )
@@ -274,7 +275,7 @@ class MotionKinematicsExtension(omni.ext.IExt):
             position, orientation = XFormPrim(self.config["reference"]).get_world_pose()
             print(
                 "[MotionKinematicsExtension] Extension reference position/orientation: {} {}".format(
-                    position, orientation
+                    self.ref_p, orientation
                 )
             )
             #base_p is cameraA's position in world frame
@@ -295,12 +296,13 @@ class MotionKinematicsExtension(omni.ext.IExt):
             pose_p = base_p + base_r.apply(delta_p)
             # Get composed orientation as [x, y, z, w]
             pose_o = pose_r.as_quat()
-
+            '''
             print(
                 "[MotionKinematicsExtension] Extension pose: {} {}".format(
                     pose_p, pose_o
                 )
             )
+            '''
             
             # wang's hack, no se3, just add relative p to cam_p
             #target_position = pose_p
