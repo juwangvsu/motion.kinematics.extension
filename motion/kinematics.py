@@ -134,7 +134,7 @@ class MotionKinematicsExtension(omni.ext.IExt):
                                                 response
                                             )
                                         )
-                                        for head, body in zip(*[iter(response.split(b"\r\n"))] * 2)
+                                        for head, body in zip(*[iter(response.split(b"\r\n"))] * 2):
                                             #head, body = response.split(b"\r\n", 1)
                                             if head.startswith(b"MSG "):
                                                 op, sub, sid, count = head.split(b" ", 3)
